@@ -10,7 +10,7 @@ PARTITIONS=()
 START_OF_PARTITION=0
 PARTITION_INDEX=0
 
-rm -rf SDBOOTIMG
+rm -rf ${SDBOOTIMG}
 
 for PARTITION in `cat ${PARAMETER} | grep '^CMDLINE' | sed 's/ //g' | sed 's/.*:\(0x.*[^)])\).*/\1/' | sed 's/,/ /g'`; do
         PARTITION_NAME=`echo ${PARTITION} | sed 's/\(.*\)(\(.*\))/\2/' | cut -f 1 -d ":"`
@@ -49,10 +49,10 @@ for PARTITION in ${PARTITIONS[@]}; do
 
     if [ "${PLENGTH}" == "-" ]; then
         echo "EXPAND"
-        parted -s ${SDBOOTIMG} -- unit s mkpart ${PARTITION} $(((${PSTART} + 0x2000))) -34s
+        parted -s ${SDBOOTIMG} -- unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) -34s
     else
-        PEND=$(((${PSTART} + 0x2000 + ${PLENGTH})))
-        parted -s ${SDBOOTIMG} unit s mkpart ${PARTITION} $(((${PSTART} + 0x2000))) $(expr ${PEND} - 1)
+        PEND=$(((${PSTART} + 0x00 + ${PLENGTH})))
+        parted -s ${SDBOOTIMG} unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) $(expr ${PEND} - 1)
     fi
 done
 
@@ -81,7 +81,7 @@ for PARTITION in ${PARTITIONS[@]}; do
     if [[ x"$IMGFILE" != x ]]; then
 		if [[ -f "$IMGFILE" ]]; then
 			echo ${PARTITION} ${IMGFILE} ${PSTART}
-			dd if=${IMGFILE}  of=${SDBOOTIMG} seek=$(((${PSTART} + 0x2000))) conv=notrunc,fsync
+			dd if=${IMGFILE}  of=${SDBOOTIMG} seek=$(((${PSTART} + 0x00))) conv=notrunc,fsync
 		else
 			if [[ x"$IMGFILE" != xRESERVED ]]; then
 				echo -e "\e[31m error: $IMGFILE not found! \e[0m"
