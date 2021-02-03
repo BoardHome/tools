@@ -26,6 +26,7 @@ ALIGN()
 ROOTFS_LAST=$(grep "rootfs:grow" Image/parameter.txt)
 if [ -z "${ROOTFS_LAST}" ]
 then
+echo "Resize rootfs partition size"
 FILE_P=$(readlink -f Image/rootfs.img)
 FS_INFO=$(dumpe2fs -h ${FILE_P})
 BLOCK_COUNT=$(echo "${FS_INFO}" | grep "^Block count" | cut -d ":" -f 2 | tr -d "[:blank:]")
@@ -54,5 +55,5 @@ fi
 echo "Making ./Image/update.img OK."
 #echo "Press any key to quit:"
 #read -n1 -s key
-mv ${PARA_FILE}.orig ${PARA_FILE}
+[ -e ${PARA_FILE}.orig ] && mv ${PARA_FILE}.orig ${PARA_FILE}
 exit $?
