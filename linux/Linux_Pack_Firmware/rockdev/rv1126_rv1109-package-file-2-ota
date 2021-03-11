@@ -4,12 +4,10 @@
 package-file	package-file
 bootloader	Image/MiniLoaderAll.bin
 parameter	Image/parameter.txt
-#trust       Image/trust.img
-#uboot       Image/uboot.img
-boot        Image/boot.img
-rootfs      Image/rootfs.img
-#recovery	Image/recovery.img
-#oem			Image/oem.img
+uboot_a       Image/uboot.img
+boot_a        Image/boot.img
+system_a      Image/rootfs.img
+oem			Image/oem.img
 #userdata    Image/userdata.img
 #misc		Image/misc.img
 # 要写入backup分区的文件就是自身（update.img）
