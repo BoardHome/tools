@@ -55,5 +55,10 @@ fi
 echo "Making ./Image/update.img OK."
 #echo "Press any key to quit:"
 #read -n1 -s key
-[ -e ${PARA_FILE}.orig ] && mv ${PARA_FILE}.orig ${PARA_FILE}
-exit $?
+if [ -e ${PARA_FILE}.orig ]
+then
+	mv ${PARA_FILE}.orig ${PARA_FILE}
+	exit $?
+else
+	exit 0
+fi
