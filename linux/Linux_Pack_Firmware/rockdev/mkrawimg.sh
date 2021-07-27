@@ -105,7 +105,11 @@ w
 y
 EOF
 
-dd if=Image/idbloader.img of=${RAWIMG} seek=${LOADER1_START} conv=notrunc
+if [ "$RK_IDBLOCK_UPDATE" = "true" ]; then
+	dd if=Image/idblock.bin of=${RAWIMG} seek=${LOADER1_START} conv=notrunc
+else
+	dd if=Image/idbloader.img of=${RAWIMG} seek=${LOADER1_START} conv=notrunc
+fi
 
 for PARTITION in ${PARTITIONS[@]}; do
     PSTART=${PARTITION}_START_PARTITION
