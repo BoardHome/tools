@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SDBOOTIMG=sdboot.img
-echo "Generate SD boot image : ${SDBOOTIMG} !"
+RAWIMG=raw.img
+echo "Generate raw image : ${RAWIMG} !"
 
 LOADER1_START=64
 PARAMETER=$(cat package-file | grep -wi parameter | awk '{printf $2}' | sed 's/\r//g')
@@ -10,7 +10,7 @@ PARTITIONS=()
 START_OF_PARTITION=0
 PARTITION_INDEX=0
 
-rm -rf ${SDBOOTIMG}
+rm -rf ${RAWIMG}
 
 for PARTITION in `cat ${PARAMETER} | grep '^CMDLINE' | sed 's/ //g' | sed 's/.*:\(0x.*[^)])\).*/\1/' | sed 's/,/ /g'`; do
         PARTITION_NAME=`echo ${PARTITION} | sed 's/\(.*\)(\(.*\))/\2/' | cut -f 1 -d ":"`
@@ -36,8 +36,8 @@ fi
 GPTIMG_MIN_SIZE=$(expr $IMG_ROOTFS_SIZE + \( $(((${PARTITION_START} + 0x2000))) \) \* 512)
 GPT_IMAGE_SIZE=$(expr $GPTIMG_MIN_SIZE \/ 1024 \/ 1024 + 2)
 
-dd if=/dev/zero of=${SDBOOTIMG} bs=1M count=0 seek=$GPT_IMAGE_SIZE
-parted -s ${SDBOOTIMG} mklabel gpt
+dd if=/dev/zero of=${RAWIMG} bs=1M count=0 seek=$GPT_IMAGE_SIZE
+parted -s ${RAWIMG} mklabel gpt
 
 for PARTITION in ${PARTITIONS[@]}; do
     PSTART=${PARTITION}_START_PARTITION
@@ -49,10 +49,10 @@ for PARTITION in ${PARTITIONS[@]}; do
 
     if [ "${PLENGTH}" == "-" ]; then
         echo "EXPAND"
-        parted -s ${SDBOOTIMG} -- unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) -34s
+        parted -s ${RAWIMG} -- unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) -34s
     else
         PEND=$(((${PSTART} + 0x00 + ${PLENGTH})))
-        parted -s ${SDBOOTIMG} unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) $(expr ${PEND} - 1)
+        parted -s ${RAWIMG} unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) $(expr ${PEND} - 1)
     fi
 done
 
@@ -61,7 +61,7 @@ VOL=$(cat ${PARAMETER} | grep 'uuid' | cut -f 1 -d "=" | cut -f 2 -d ":")
 VOLINDEX=${VOL}_INDEX_PARTITION
 VOLINDEX=${!VOLINDEX}
 
-gdisk ${SDBOOTIMG} <<EOF
+gdisk ${RAWIMG} <<EOF
 x
 c
 ${VOLINDEX}
@@ -70,7 +70,7 @@ w
 y
 EOF
 
-dd if=Image/idbloader.img of=${SDBOOTIMG} seek=${LOADER1_START} conv=notrunc
+dd if=Image/idbloader.img of=${RAWIMG} seek=${LOADER1_START} conv=notrunc
 
 for PARTITION in ${PARTITIONS[@]}; do
     PSTART=${PARTITION}_START_PARTITION
@@ -81,7 +81,7 @@ for PARTITION in ${PARTITIONS[@]}; do
     if [[ x"$IMGFILE" != x ]]; then
 		if [[ -f "$IMGFILE" ]]; then
 			echo ${PARTITION} ${IMGFILE} ${PSTART}
-			dd if=${IMGFILE}  of=${SDBOOTIMG} seek=$(((${PSTART} + 0x00))) conv=notrunc,fsync
+			dd if=${IMGFILE}  of=${RAWIMG} seek=$(((${PSTART} + 0x00))) conv=notrunc,fsync
 		else
 			if [[ x"$IMGFILE" != xRESERVED ]]; then
 				echo -e "\e[31m error: $IMGFILE not found! \e[0m"
@@ -90,4 +90,4 @@ for PARTITION in ${PARTITIONS[@]}; do
     fi
 done
 
-echo "mk sdboot img OK"
+echo "mk raw img OK"
