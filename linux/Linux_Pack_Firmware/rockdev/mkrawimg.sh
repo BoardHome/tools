@@ -1,5 +1,4 @@
 #!/bin/bash
-
 RAWIMG=raw.img
 echo "Generate raw image : ${RAWIMG} !"
 
@@ -48,7 +47,8 @@ sed -i "/^CMDLINE.*/s/-@0x[0-9a-fA-F]*/-@$NEXT_START/g" $PARA_FILE
 fi
 
 for PARTITION in `cat ${PARAMETER} | grep '^CMDLINE' | sed 's/ //g' | sed 's/.*:\(0x.*[^)])\).*/\1/' | sed 's/,/ /g'`; do
-        PARTITION_NAME=`echo ${PARTITION} | sed 's/\(.*\)(\(.*\))/\2/' | cut -f 1 -d ":"`
+        PARTITION_NAME=`echo ${PARTITION} | sed 's/\(.*\)(\(.*\))/\2/' | awk -F : {'print $1'}`
+        PARTITION_FLAG=`echo ${PARTITION} | sed 's/\(.*\)(\(.*\))/\2/' | awk -F : {'print $2'}`
         PARTITION_START=`echo ${PARTITION} | sed 's/.*@\(.*\)(.*)/\1/'`
         PARTITION_LENGTH=`echo ${PARTITION} | sed 's/\(.*\)@.*/\1/'`
 
@@ -56,6 +56,7 @@ for PARTITION in `cat ${PARAMETER} | grep '^CMDLINE' | sed 's/ //g' | sed 's/.*:
         PARTITION_INDEX=$(expr $PARTITION_INDEX + 1)
 
         eval "${PARTITION_NAME}_START_PARTITION=${PARTITION_START}"
+        eval "${PARTITION_NAME}_FLAG_PARTITION=${PARTITION_FLAG}"
         eval "${PARTITION_NAME}_LENGTH_PARTITION=${PARTITION_LENGTH}"
         eval "${PARTITION_NAME}_INDEX_PARTITION=${PARTITION_INDEX}"
 done
@@ -76,9 +77,11 @@ parted -s ${RAWIMG} mklabel gpt
 
 for PARTITION in ${PARTITIONS[@]}; do
     PSTART=${PARTITION}_START_PARTITION
+    PFLAG=${PARTITION}_FLAG_PARTITION
     PLENGTH=${PARTITION}_LENGTH_PARTITION
     PINDEX=${PARTITION}_INDEX_PARTITION
     PSTART=${!PSTART}
+    PFLAG=${!PFLAG}
     PLENGTH=${!PLENGTH}
     PINDEX=${!PINDEX}
 
@@ -89,7 +92,12 @@ for PARTITION in ${PARTITIONS[@]}; do
         PEND=$(((${PSTART} + 0x00 + ${PLENGTH})))
         parted -s ${RAWIMG} unit s mkpart ${PARTITION} $(((${PSTART} + 0x00))) $(expr ${PEND} - 1)
     fi
+
+    if [ "${PFLAG}"x == "bootable"x ];then
+        parted -s ${RAWIMG} set $PINDEX legacy_boot on
+    fi
 done
+
 
 UUID=$(cat ${PARAMETER} | grep 'uuid' | cut -f 2 -d "=")
 VOL=$(cat ${PARAMETER} | grep 'uuid' | cut -f 1 -d "=" | cut -f 2 -d ":")
