@@ -25,6 +25,7 @@ ALIGN()
 }
 
 ROOTFS_LAST=$(grep "rootfs:grow" Image/parameter.txt)
+if [ "$FIREFLY_RESIZE_ROOTFS_PARTITION" != "disabled" ]; then
 if [ -z "${ROOTFS_LAST}" ]
 then
 echo "Resize rootfs partition size"
@@ -50,6 +51,7 @@ NEXT_START=$(printf 0x%x $(($PSIZE + $OFFSET)))
 sed -i.orig "s/$ORIGIN/$NEWSTR/g" $PARA_FILE
 sed -i "/^CMDLINE.*/s/-@0x[0-9a-fA-F]*/-@$NEXT_START/g" $PARA_FILE
 fi
+fi
 
 ./afptool -pack ./ Image/update.img || pause
 ./rkImageMaker -RK330C Image/MiniLoaderAll.bin Image/update.img update.img -os_type:androidos || pause
@@ -58,7 +60,9 @@ echo "Making ./Image/update.img OK."
 #read -n1 -s key
 if [ -e ${PARA_FILE}.orig ]
 then
-	mv ${PARA_FILE}.orig ${PARA_FILE}
+	if [ "$FIREFLY_RESIZE_ROOTFS_PARTITION" != "disabled" ]; then
+		mv ${PARA_FILE}.orig ${PARA_FILE}
+	fi
 	exit $?
 else
 	exit 0
