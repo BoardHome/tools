@@ -13,7 +13,6 @@ boot_a		Image/boot.img
 boot_b		Image/boot.img
 system_a	Image/rootfs.img
 system_b	Image/rootfs.img
-oem		Image/oem.img
 userdata	Image/userdata.img
 # 要写入backup分区的文件就是自身（update.img）
 # SELF 是关键字，表示升级文件（update.img）自身
